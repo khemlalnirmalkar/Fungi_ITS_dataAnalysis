@@ -1,12 +1,14 @@
 #!/bin/bash
 
-##Date : APril 4th, 2022
-Author  Khem
+Date : April 4th, 2022
+Author:  Khem
 Summary of the data:
 
 1. 83 samples from Bhare and plosOne paper work
 2. already used by Jigar for his honors thesis
 3. renanalysis for samples for yeast using UNITE databse (10.05.2021) in qiime2 (qiime2-2022.2)
+4. excluded 5 samples due to <540 reads after DADA2 denosing
+5. reads are ITS (fungi) amplicons, only forward
 
 
 qiime tools import \
@@ -21,7 +23,7 @@ qiime demux summarize \
 
 
 **************************************
-## trunc at 210
+## phred minimum 25, trunc at 210
 
 qiime dada2 denoise-single \
   --i-demultiplexed-seqs single-end-demux.qza \
@@ -58,7 +60,7 @@ qiime phylogeny align-to-tree-mafft-fasttree \
   --o-tree unrooted-tree.qza \
   --o-rooted-tree rooted-tree.qza
 
-################ to go more deep or high reads based on minimum reads count,
+################ to go more deep or high reads based on minimum reads count, to cover other 78 samples
   qiime diversity core-metrics-phylogenetic \
     --i-phylogeny rooted-tree.qza \
     --i-table table-dada2_210.qza \
@@ -106,12 +108,5 @@ qiime feature-table relative-frequency \
  --i-table table-dada2_210.qza \
  --o-relative-frequency-table relative_abundance_table.qza
 
-
-#############doesnt work,
-qiime taxa barplot \
-  --i-table relative_abundance_table.qza \
-  --i-taxonomy taxonomy.qza \
-  --m-metadata-file metadata_qiim2.tsv \
-  --o-visualization relative_taxa-bar-plots.qzv
-
+***********in progress
 
