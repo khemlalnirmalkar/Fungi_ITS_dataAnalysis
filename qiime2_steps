@@ -4,7 +4,7 @@ Date : April 4th, 2022
 Author:  Khem
 Summary of the data:
 
-1. 83 samples from Bhare and plosOne paper work
+1. 83 samples from Bhare and plosOne paper work (ASD/TD)
 2. already used by Jigar for his honors thesis
 3. renanalysis for samples for yeast using UNITE databse (10.05.2021) in qiime2 (qiime2-2022.2)
 4. excluded 5 samples due to <540 reads after DADA2 denosing
