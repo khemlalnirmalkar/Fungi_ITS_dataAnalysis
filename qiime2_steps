@@ -1,0 +1,117 @@
+#!/bin/bash
+
+##Date : APril 4th, 2022
+Author  Khem
+Summary of the data:
+
+1. 83 samples from Bhare and plosOne paper work
+2. already used by Jigar for his honors thesis
+3. renanalysis for samples for yeast using UNITE databse (10.05.2021) in qiime2 (qiime2-2022.2)
+
+
+qiime tools import \
+  --type 'SampleData[SequencesWithQuality]' \
+  --input-path sample-manifest.tsv \
+  --input-format SingleEndFastqManifestPhred33V2 \
+  --output-path single-end-demux.qza
+
+qiime demux summarize \
+  --i-data single-end-demux.qza \
+  --o-visualization demux.qzv
+
+
+**************************************
+## trunc at 210
+
+qiime dada2 denoise-single \
+  --i-demultiplexed-seqs single-end-demux.qza \
+  --p-trim-left 0 \
+  --p-trunc-len 210 \
+  --o-representative-sequences rep-seqs-dada2_210.qza \
+  --o-table table-dada2_210.qza \
+  --o-denoising-stats stats-dada2_210.qza
+
+qiime metadata tabulate \
+  --m-input-file stats-dada2_210.qza \
+  --o-visualization stats-dada2.qzv
+
+
+
+qiime feature-table summarize \
+  --i-table table-dada2_210.qza \
+  --o-visualization table.qzv \
+  --m-sample-metadata-file metadata_qiim2.tsv
+
+
+qiime feature-table tabulate-seqs \
+  --i-data rep-seqs-dada2_210.qza \
+  --o-visualization rep-seqs.qzv
+
+
+###reads are low (<530) after denosing for sample number= 33 (ASD, plosone), 14 (TD,plosone), 45 (TD,plosone), A7 (ASD, Bhare) , C55 (TD, Bhare), excluded and did re-analysis
+***** total =78 (TD=38, ASD=40 ), plosOne 36 (TD=18, ASD=18) , Bhare 42 (TD=20, ASD=22)
+
+qiime phylogeny align-to-tree-mafft-fasttree \
+  --i-sequences rep-seqs-dada2_210.qza \
+  --o-alignment aligned-rep-seqs.qza \
+  --o-masked-alignment masked-aligned-rep-seqs.qza \
+  --o-tree unrooted-tree.qza \
+  --o-rooted-tree rooted-tree.qza
+
+################ to go more deep or high reads based on minimum reads count,
+  qiime diversity core-metrics-phylogenetic \
+    --i-phylogeny rooted-tree.qza \
+    --i-table table-dada2_210.qza \
+    --p-sampling-depth 1328 \
+    --m-metadata-file metadata_qiim2.tsv \
+    --output-dir core-metrics-results_1328Reads \
+    --verbose
+qiime diversity alpha-group-significance \
+ --i-alpha-diversity core-metrics-results_1328Reads/faith_pd_vector.qza \
+  --m-metadata-file metadata_qiim2.tsv \
+  --o-visualization core-metrics-results_1328Reads/faith-pd-group-significance.qzv
+
+qiime diversity alpha-group-significance \
+  --i-alpha-diversity core-metrics-results_1328Reads/evenness_vector.qza \
+  --m-metadata-file metadata_qiim2.tsv \
+  --o-visualization core-metrics-results_1328Reads/evenness-group-significance.qzv
+  
+qiime diversity alpha-group-significance \
+  --i-alpha-diversity core-metrics-results_1328Reads/observed_otus_vector.qza \
+  --m-metadata-file metadata_qiim2.tsv \
+  --o-visualization core-metrics-results_1328Reads/observed_otus_group-significance.qzv
+
+qiime diversity alpha-group-significance \
+  --i-alpha-diversity core-metrics-results_1328Reads/shannon_vector.qza \
+  --m-metadata-file metadata_qiim2.tsv \
+  --o-visualization core-metrics-results_1328Reads/shannon-group-significance.qzv
+
+qiime feature-classifier classify-sklearn \
+  --i-classifier /media/scebmeta/SSD/Collaboration/jigar_yeastData/UNITE_database/sh_qiime_release_s_10.05.2021/unite-ver8-99-classifier-s_10.05.2021.qza \
+  --i-reads rep-seqs-dada2_210.qza \
+  --o-classification taxonomy.qza \
+  --verbose
+
+qiime metadata tabulate \
+  --m-input-file taxonomy.qza \
+  --o-visualization taxonomy.qzv
+
+qiime taxa barplot \
+  --i-table table-dada2_210.qza \
+  --i-taxonomy taxonomy.qza \
+  --m-metadata-file metadata_qiim2.tsv \
+  --o-visualization taxa-bar-plots.qzv
+
+qiime feature-table relative-frequency \
+ --i-table table-dada2_210.qza \
+ --o-relative-frequency-table relative_abundance_table.qza
+
+
+#############doesnt work,
+qiime taxa barplot \
+  --i-table relative_abundance_table.qza \
+  --i-taxonomy taxonomy.qza \
+  --m-metadata-file metadata_qiim2.tsv \
+  --o-visualization relative_taxa-bar-plots.qzv
+
+
